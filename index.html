@@ -1,340 +1,518 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Aging Portraits ∞ 2055</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aging Portraits ∞ 2055</title>
 
-<link rel="manifest" href="data:application/manifest+json,{
-  \"name\": \"Aging Portraits ∞ 2055\",
-  \"short_name\": \"∞2055\",
-  \"start_url\": \".\",
-  \"display\": \"standalone\",
-  \"background_color\": \"#ffffff\",
-  \"theme_color\": \"#ff0000\",
-  \"icons\": [{ \"src\": \"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E\", \"sizes\": \"1x1\", \"type\": \"image/svg+xml\" }]
-}">
-<meta name="theme-color" content="#ff0000">
+  <!-- Progressive Web App manifest — allows installability & standalone mode -->
+  <link rel="manifest" href="data:application/manifest+json,{
+    \"name\": \"Aging Portraits ∞ 2055\",
+    \"short_name\": \"∞2055\",
+    \"start_url\": \".\",
+    \"display\": \"standalone\",
+    \"background_color\": \"#ffffff\",
+    \"theme_color\": \"#ff0000\",
+    \"icons\": [{ \"src\": \"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E\", \"sizes\": \"1x1\", \"type\": \"image/svg+xml\" }]
+  }">
+  <meta name="theme-color" content="#ff0000">
 
-<style>
-  :root { --accent:#ff0000; transition:var(--accent) .92s cubic-bezier(.22,1,.36,1); }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  html { -webkit-font-smoothing:subpixel-antialiased; }
-  html,body { height:100%; background:#fff; overflow:hidden; font-family:Consolas,"Courier New",monospace; color:var(--accent); }
-  body { display:grid; grid-template-rows:auto 1fr auto; position:relative; }
-
-  header { display:flex; flex-direction:column; gap:18px; padding:20px 30px 10px; z-index:20; pointer-events:none; }
-  .header-top { display:flex; justify-content:space-between; align-items:flex-start; width:100%; }
-  .header-bottom { display:flex; justify-content:space-between; align-items:flex-end; width:100%; border:solid 1px var(--accent); padding:8px 14px;
-    pointer-events:all; cursor:text; transition:all .6s cubic-bezier(.22,1,.36,1); }
-  .title { background:var(--accent); color:#fff; padding:8px 14px; letter-spacing:1px;
-    pointer-events:all; cursor:pointer; transition:all .6s cubic-bezier(.22,1,.36,1); }
-  .title span { font-size:12.5px; opacity:.89; letter-spacing:1.8px; line-height:1.35; margin-top:6px; display:block; }
-
-  /* TIMELAPSE PROMPT */
-  .timelapse-prompt {
-    color:#ffffff; font-size:11px; letter-spacing:2px; opacity:.6;
-    pointer-events:all; cursor:pointer; animation:blink 2.5s infinite;
-    background:var(--accent); padding:2px 6px; align-self:flex-end;
-    transition:all .38s cubic-bezier(.22,1,.36,1);
-  }
-  .timelapse-prompt:hover, .timelapse-prompt:active { opacity:1; transform:translateX(4px); }
-  .timelapse-prompt:active { transform:translateX(8px) scale(1.08); }
-
-  /* TIMELAPSE OVERLAY — EXACTLY 2× DEFAULT SIZE, NO FULLSCREEN */
-  #timelapse-overlay {
-    position:fixed; inset:0; background:rgba(0,0,0,0.96);
-    display:grid; place-items:center; opacity:0; pointer-events:none;
-    transition:opacity .62s cubic-bezier(.22,1,.36,1); z-index:100;
-  }
-  #timelapse-overlay.visible { opacity:1; pointer-events:all; }
-
-  #timelapse-container {
-    position:relative;
-    width:160vmin;
-    height:90vmin;              
-    box-shadow:0 20px 60px rgba(0,0,0,0.8);
-  }
-  #timelapse-container iframe {
-    width:100%; height:100%; border:none; background:#000;
-  }
-  #timelapse-close {
-    position:absolute; top:-64px; left:50%; transform:translateX(-50%);
-    color:#fff; font-size:13px; letter-spacing:2px; cursor:pointer; opacity:.7;
-    transition:opacity .3s;
-  }
-  #timelapse-close:hover { opacity:1; }
-
-  /* Mobile: slightly smaller 2× to avoid feeling cramped */
-  @media (max-width:840px) {
-    #timelapse-container {
-      width:92vw;
-      height:51.75vw;     /* maintains 16:9 */
-      max-height:82vh;
+  <style>
+    /* ==================================================================
+       GLOBAL & THEMING
+       ================================================================== */
+    :root {
+      --accent: #ff0000;                                 /* Primary theme color — changes per portrait */
+      transition: var(--accent) .92s cubic-bezier(.22,1,.36,1);
     }
-  }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html { -webkit-font-smoothing:subpixel-antialiased; }
+    html,body {
+      height:100%; background:#fff; overflow:hidden;
+      font-family: Consolas,"Courier New",monospace;
+      color: var(--accent);
+    }
+    body { display:grid; grid-template-rows:auto 1fr auto; position:relative; }
 
-  /* PORTRAIT FRAME */
-  #frame {
-    width:100%; height:100%; border:none; background:#fff; opacity:0;
-    transition:opacity .68s cubic-bezier(.22,1,.36,1); z-index:1;
-  }
+    /* ==================================================================
+       HEADER LAYOUT — Desktop & Mobile Unified
+       ================================================================== */
+    header {
+      display:flex; flex-direction:column; gap:18px;
+      padding:20px 30px 10px; z-index:20; pointer-events:none;
+    }
+    .header-top {
+      display:flex; justify-content:space-between; align-items:flex-start; width:100%;
+    }
+    .header-bottom {
+      display:flex; justify-content:space-between; align-items:flex-end; width:100%;
+      border:solid 1px var(--accent); padding:8px 14px;
+      pointer-events:all; cursor:text;
+      transition:all .6s cubic-bezier(.22,1,.36,1);
+      flex-wrap:wrap; gap:10px;                          /* Ensures clean wrap on small screens */
+    }
 
-  /* BENEDICTION — DESKTOP */
-  footer { position:absolute; bottom:20px; left:56px; max-width:540px; pointer-events:none; z-index:20; }
-  .benediction {
-    font-size:12px; line-height:1.32; letter-spacing:.6px; opacity:.98; user-select:none;
-    color:var(--accent); -webkit-text-stroke:1.4px #fff; text-stroke:1.4px #fff; paint-order:stroke fill;
-  }
+    .title {
+      background:var(--accent); color:#fff; padding:8px 14px; letter-spacing:1px;
+      pointer-events:all; cursor:pointer;
+      transition:all .6s cubic-bezier(.22,1,.36,1);
+    }
+    .title span {
+      font-size:12.5px; opacity:.89; letter-spacing:1.8px; line-height:1.35;
+      margin-top:6px; display:block;
+    }
 
-  /* MOBILE LAYOUT */
-  @media (max-width:840px) {
-    html,body { height:auto; min-height:100vh; overflow-y:auto; overflow-x:hidden; }
-    body { grid-template-rows:auto 1fr auto; }
+    /* ==================================================================
+       INTERACTIVE PROMPTS — NEXT / TIMELAPSE / REFLECTION
+       Unified style for visual consistency across all three actions
+       ================================================================== */
+    .prompt, .timelapse-prompt, .reflection-prompt {
+      color:#fff; font-size:11px; letter-spacing:2px; opacity:.65;
+      pointer-events:all; cursor:pointer;
+      animation:blink 2.8s infinite;
+      background:var(--accent); padding:3px 8px; border-radius:2px;
+      transition:all .38s cubic-bezier(.22,1,.36,1);
+    }
+    .prompt:hover, .timelapse-prompt:hover, .reflection-prompt:hover,
+    .prompt:active, .timelapse-prompt:active, .reflection-prompt:active {
+      opacity:1; transform:translateY(-2px);
+    }
+    .prompt:active, .timelapse-prompt:active, .reflection-prompt:active {
+      transform:translateY(-4px) scale(1.08);
+    }
+    @keyframes blink { 50%{opacity:.15} }
 
-    header { padding:16px 20px 10px; gap:14px; }
-    .header-top { flex-direction:column; gap:12px; align-items:flex-start; }
-    .header-bottom { flex-direction:column; align-items:flex-end; gap:8px; }
-    .collection-link, .asset-link, .timelapse-prompt, .prompt { align-self:flex-end; }
-    .info { font-size:12.5px; align-self:flex-end; }
+    /* ==================================================================
+       OVERLAYS — Timelapse & Reflection
+       Both use light "electronic paper" aesthetic with blur backdrop
+       ================================================================== */
+    #timelapse-overlay, #reflection-overlay {
+      position:fixed; inset:0;
+      background:rgba(255,255,255,0.97); backdrop-filter:blur(12px);
+      display:grid; place-items:center;
+      opacity:0; pointer-events:none;
+      transition:opacity .68s cubic-bezier(.22,1,.36,1);
+      z-index:100;
+    }
+    #timelapse-overlay.visible, #reflection-overlay.visible {
+      opacity:1; pointer-events:all;
+    }
 
-    #frame { height:auto; min-height:60vh; max-height:70vh; }
+    /* Timelapse video container — 16:9 ratio, large but not fullscreen */
+    #timelapse-container {
+      position:relative; width:160vmin; height:90vmin;
+      box-shadow:0 30px 80px rgba(0,0,0,0.3);
+    }
+    #timelapse-container iframe {
+      width:100%; height:100%; border:none; background:#000;
+    }
+
+    /* Reflection "electronic paper" panel — white page with accent border */
+    #reflection-paper {
+      position:relative; background:#fff; color:#111;
+      padding:60px 70px; max-width:900px; max-height:92vh; overflow-y:auto;
+      border:3px solid var(--accent);
+      box-shadow:0 40px 100px rgba(0,0,0,0.28);
+      line-height:1.74; font-size:15.4px; letter-spacing:0.5px;
+    }
+    #reflection-paper h3 {
+      color:var(--accent); margin:38px 0 16px; font-size:19.5px;
+    }
+    #reflection-paper strong { color:var(--accent); }
+    #reflection-paper ul { margin:18px 0 22px 32px; }
+    #reflection-paper li { margin-bottom:7px; }
+    #reflection-paper blockquote {
+      margin:48px 0; padding:24px 0; text-align:center; font-style:italic;
+      border-top:1px solid #ccc; border-bottom:1px solid #ccc;
+      color:#333; font-size:16.8px;
+    }
+
+    /* Close buttons */
+    .close-btn {
+      position:absolute; top:-64px; left:50%; transform:translateX(-50%);
+      color:#000; font-size:13px; letter-spacing:2px; cursor:pointer; opacity:.8;
+      transition:opacity .3s;
+    }
+    .close-btn:hover { opacity:1; }
+    #reflection-close {
+      position:absolute; top:18px; right:26px; font-size:34px; cursor:pointer;
+      color:#888; transition:color .3s;
+    }
+    #reflection-close:hover { color:var(--accent); }
+
+    /* ==================================================================
+       RESPONSIVE ADJUSTMENTS
+       ================================================================== */
+    @media (max-width:840px) {
+      #timelapse-container { width:92vw; height:51.75vw; max-height:82vh; }
+      #reflection-paper { padding:44px 36px; font-size:15px; }
+      .header-bottom { flex-direction:column; align-items:flex-end; gap:10px; }
+    }
+
+    /* ==================================================================
+       CORE LAYOUT ELEMENTS — Portrait Frame & Benediction
+       ================================================================== */
+    #frame {
+      width:100%; height:100%; border:none; background:#fff; opacity:0;
+      transition:opacity .68s cubic-bezier(.22,1,.36,1); z-index:1;
+    }
 
     footer {
-      position:static;
-      padding:40px 20px 100px;
-      background:#fff;
-      pointer-events:all;
-      z-index:20;
+      position:absolute; bottom:20px; left:56px; max-width:540px;
+      pointer-events:none; z-index:20;
     }
     .benediction {
-      font-size:14.2px; line-height:1.42; max-width:92%; margin:0 auto;
+      font-size:12px; line-height:1.32; letter-spacing:.6px; opacity:.98;
+      user-select:none; color:var(--accent);
+      -webkit-text-stroke:1.4px #fff; text-stroke:1.4px #fff; paint-order:stroke fill;
     }
-  }
 
-  @media (min-width:841px) {
-    footer { bottom:11vh; left:5.8vw; max-width:520px; }
-    .benediction { font-size:13.8px; line-height:1.36; }
-  }
+    @media (max-width:840px) {
+      html,body { height:auto; min-height:100vh; overflow-y:auto; overflow-x:hidden; }
+      header { padding:16px 20px 10px; gap:14px; }
+      .header-top { flex-direction:column; gap:12px; align-items:flex-start; }
+      .collection-link, .asset-link { align-self:flex-end; }
+      #frame { height:auto; min-height:60vh; max-height:70vh; }
+      footer { position:static; padding:40px 20px 100px; background:#fff; pointer-events:all; }
+      .benediction { font-size:14.2px; line-height:1.42; max-width:92%; margin:0 auto; }
+    }
+    @media (min-width:841px) {
+      footer { bottom:11vh; left:5.8vw; max-width:520px; }
+      .benediction { font-size:13.8px; line-height:1.36; }
+    }
 
-  /* SHARED STYLES */
-  .collection-link, .asset-link {
-    background:var(--accent); color:#fff; padding:8px 14px; letter-spacing:1px;
-    pointer-events:all; cursor:pointer;
-    transition:background .38s cubic-bezier(.22,1,.36,1), transform .38s cubic-bezier(.22,1,.36,1);
-  }
-  .collection-link a, .asset-link a { color:#fff; text-decoration:none; }
-  .collection-link:hover, .asset-link:hover {
-    background:color-mix(in srgb,var(--accent) 80%,black); transform:translateY(-2px);
-  }
-  .info { font-size:13px; letter-spacing:1.5px; opacity:.94; pointer-events:none; }
-  .prompt { color:#fff; font-size:11px; letter-spacing:2px; opacity:.6; pointer-events:all; cursor:pointer;
-    animation:blink 2.5s infinite; background:var(--accent); }
-  @keyframes blink { 50%{opacity:.15} }
-  .prompt:hover, .prompt:active { opacity:1; transform:translateX(4px); }
-  .prompt:active { transform:translateX(8px) scale(1.08); }
-  .loading-text {
-    position:absolute; inset:0; display:grid; place-items:center;
-    font-size:13px; letter-spacing:2px; pointer-events:none;
-    animation:blink 1.8s infinite; z-index:30;
-    color:var(--accent); -webkit-text-stroke:1.4px #fff; text-stroke:1.4px #fff; paint-order:stroke fill;
-  }
-</style>
+    /* Links in header */
+    .collection-link, .asset-link {
+      background:var(--accent); color:#fff; padding:8px 14px; letter-spacing:1px;
+      pointer-events:all; cursor:pointer;
+      transition:background .38s, transform .38s;
+    }
+    .collection-link a, .asset-link a { color:#fff; text-decoration:none; }
+    .collection-link:hover, .asset-link:hover {
+      background:color-mix(in srgb,var(--accent) 80%,black);
+      transform:translateY(-2px);
+    }
+
+    /* Info ticker & loading text */
+    .info { font-size:13px; letter-spacing:1.5px; opacity:.94; pointer-events:none; }
+    .loading-text {
+      position:absolute; inset:0; display:grid; place-items:center;
+      font-size:13px; letter-spacing:2px; pointer-events:none;
+      animation:blink 1.8s infinite; z-index:30;
+      color:var(--accent);
+      -webkit-text-stroke:1.4px #fff; text-stroke:1.4px #fff; paint-order:stroke fill;
+    }
+  </style>
 </head>
 <body>
 
-<header>
-  <div class="header-top">
-    <div class="title">AGING PORTRAITS<br><span>30-YEAR REAL-TIME AGING STUDY • 2025-10-16 → 2055-10-16<br>POST-2055: DAILY CYCLE (EVEN = AGED • ODD = ORIGINAL)</span></div>
-    <div class="collection-link"><a href="https://bazar.arweave.net/#/collection/HyzzmvsZifq3FiRjSNX6Rt0OamINcdfNbO5tvEjWDf0" target="_blank">View collection</a></div>
-    <div class="asset-link"><a id="assetHref" href="#" target="_blank">View asset</a></div>
+  <!-- ==================================================================
+       HEADER — Title, Links, and Interactive Prompts
+       ================================================================== -->
+  <header>
+    <div class="header-top">
+      <div class="title">
+        AGING PORTRAITS<br>
+        <span>30-YEAR REAL-TIME AGING STUDY • 2025-10-16 → 2055-10-16<br>
+        POST-2055: DAILY CYCLE (EVEN = AGED • ODD = ORIGINAL)</span>
+      </div>
+      <div class="collection-link"><a href="https://bazar.arweave.net/#/collection/HyzzmvsZifq3FiRjSNX6Rt0OamINcdfNbO5tvEjWDf0" target="_blank">View collection</a></div>
+      <div class="asset-link"><a id="assetHref" href="#" target="_blank">View asset</a></div>
+    </div>
+    <div class="header-bottom">
+      <div class="prompt"><strong>NEXT →</strong></div>
+      <div class="timelapse-prompt"><strong>WATCH TIMELAPSE</strong></div>
+      <div class="reflection-prompt"><strong>READ REFLECTION</strong></div>
+      <div class="info" id="info"></div>
+    </div>
+  </header>
+
+  <!-- Loading indicator — shown until first portrait loads -->
+  <div class="loading-text" id="loadingText"><strong>Loading portrait …</strong></div>
+
+  <!-- Main portrait display — each portrait is an individual HTML file loaded in iframe -->
+  <iframe id="frame" src="" allowfullscreen sandbox="allow-scripts allow-same-origin"></iframe>
+
+  <!-- ==================================================================
+       TIMELAPSE OVERLAY — Light mode, large centered video
+       ================================================================== -->
+  <div id="timelapse-overlay">
+    <div id="timelapse-container">
+      <div class="close-btn" id="timelapse-close">× CLOSE</div>
+      <iframe src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+    </div>
   </div>
-  <div class="header-bottom">
-    <div class="prompt"><strong>NEXT →</strong></div>
-    <div class="timelapse-prompt"><strong>WATCH TIMELAPSE</strong></div>
-    <div class="info" id="info"></div>
+
+  <!-- ==================================================================
+       REFLECTION OVERLAY — Philosophical meditation in "electronic paper" style
+       ================================================================== -->
+  <div id="reflection-overlay">
+    <div id="reflection-paper">
+      <div id="reflection-close">×</div>
+      <h3>A Reflection for Viewers of “Aging Portraits ∞ 2055”</h3>
+      <p>You are looking at a portrait that will age for thirty years.<br>
+      Not quickly, not instantly, but slowly — almost imperceptibly — across decades.<br>
+      What you see is generated by code, yet what you <em>feel</em> belongs only to you.</p>
+
+      <p>The modern world is filled with machines that simulate life.<br>
+      They calculate, imitate, predict, and transform images with astonishing power.<br>
+      But as you watch this face change, it becomes clear that machines can only show <strong>appearances</strong>.<br>
+      It is the viewer who supplies <strong>meaning</strong>.</p>
+
+      <h3>Mechanism Can Replicate Form; Only Mind Can Experience It</h3>
+      <p>A computer can measure the passage of time, but it cannot <em>feel</em> time.<br>
+      It can modify a face, but it cannot understand aging.<br>
+      It can display the illusion of continuity, but it has no sense of destiny.</p>
+      <p>What makes this portrait compelling is not the mechanism behind it,<br>
+      but the human mind in front of it — the one perceiving change, imagining story, and sensing the dignity of a life unfolding.</p>
+      <p>While the machine follows mathematical law, the viewer brings:</p>
+      <ul>
+        <li>memory,</li>
+        <li>reflection,</li>
+        <li>longing,</li>
+        <li>conscience,</li>
+        <li>and an inner connection to the Universal Father.</li>
+      </ul>
+      <p>It is the viewer’s own inner life that turns a digital sequence into an encounter with meaning.</p>
+
+      <h3>Art Is the Human Answer to the Age of Simulation</h3>
+      <p>Machines today can create perfect images in seconds.<br>
+      They can age a face in moments.<br>
+      They can mimic voices, gestures, and patterns of speech.<br>
+      This power is real — but without meaning.</p>
+      <p>Art is the bridge that restores meaning.</p>
+
+      <h3>A Portrait That Ages Over 30 Years</h3>
+      <p>To witness a face slowly transform is to witness yourself in a mirror of time.<br>
+      The portrait becomes a reminder that every human life unfolds moment by moment — not through computation, but through lived experience.</p>
+
+      <h3>This Work as a Response to Digital Immortality</h3>
+      <p>Our age is captivated by the idea that identity can be preserved as data — that a person might continue inside a machine.<br>
+      But watching this portrait age reveals the limitation of that idea.<br>
+      Digital endurance is not immortality. Pattern is not personality. Simulation is not spirit.</p>
+
+      <h3>What This Artwork Ultimately Invites</h3>
+      <p>As you watch this portrait evolve, year after year, you are invited not to marvel at the machine, but to reflect on yourself.</p>
+
+      <h3>A Closing Thought</h3>
+      <blockquote>
+        <strong>Machines can imitate the passage of time,<br>
+        but only a living soul can feel its significance.</strong><br><br>
+        <strong>Art stands in the space between —<br>
+        turning patterns into insight,<br>
+        time into meaning,<br>
+        and perception into reflection.</strong>
+      </blockquote>
+    </div>
   </div>
-</header>
 
-<div class="loading-text" id="loadingText"><strong>Loading portrait …</strong></div>
-<iframe id="frame" src="" allowfullscreen sandbox="allow-scripts allow-same-origin"></iframe>
+  <!-- ==================================================================
+       FOOTER — The Benediction (inspired by Urantia / spiritual philosophy)
+       ================================================================== -->
+  <footer>
+    <div class="benediction">
+      <strong>Mind is living; mechanism is law.<br>
+      Machines extend the reach of mind but not its life.<br>
+      Their power and precision await the guidance of personality and the direction of spirit.<br><br>
+      When mind forgets spirit, civilization hardens into mechanism;<br>
+      when spirit illumines mind, civilization ascends toward beauty.<br><br>
+      Art is the bridge between them—<br>
+      the aesthetic ministry that unites pattern with light, reason with feeling, power with love.<br>
+      Through art, man revalues his machines and spiritualizes his world.<br><br>
+      Thus, the enduring task of every age is not to make mechanisms more human,<br>
+      but to make humans more spiritual—<br>
+      that through enlightened mind and inspired art,<br>
+      the material creations of man may become the luminous instruments of God.</strong>
+    </div>
+  </footer>
 
-<!-- TIMELAPSE OVERLAY — 2× DEFAULT SIZE -->
-<div id="timelapse-overlay">
-  <div id="timelapse-container">
-    <div id="timelapse-close">× CLOSE</div>
-    <iframe src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-  </div>
-</div>
+  <!-- ==================================================================
+       SCRIPT — Core logic: portrait cycling, time tracking, overlays
+       ================================================================== -->
+  <script>
+    // Portrait database — each entry loads its own HTML file and sets theme color
+    const portraits = [
+      { file:"2pac.html",color:"#ff0000",asset:"https://bazar.arweave.net/#/asset/rpeFqd9YpGla0ca97AqtDGZLmHsbLGUQJZyJhIYfqow"},
+      {file:"bruce-lee.html",color:"#aa8800",asset:"https://bazar.arweave.net/#/asset/7_DyqPQcwIcZIXdWe6XNVM3s6GFTC79TRnYyVjo71uo"},
+      {file:"esir.html",color:"#ff0000",asset:"https://bazar.arweave.net/#/asset/RydjHqylE783V-ARQSQqIIcy1USq-K8tnJ6QR9cOf-A"},
+      {file:"marilyn-monroe.html",color:"#5c5c5c",asset:"https://bazar.arweave.net/#/asset/z-4jgyc9n7xmWVRiwmxnBp33HrEyQV8wceLPBRG_s7g"},
+      {file:"princess-diana.html",color:"#de7a00",asset:"https://bazar.arweave.net/#/asset/anLL7r9JzPRSD1rg7tBiJFJzD-6j-f_HeB8Q8jAj9q0"},
+      {file:"xxxtentacion.html",color:"#006fc5",asset:"https://bazar.arweave.net/#/asset/8b-TNGjQEvH5iBb-7WrfBxplolZ-2O0BeZCJ6sZz9E8"}
+    ];
 
-<footer>
-  <div class="benediction">
-    <strong>Mind is living; mechanism is law.<br>
-    Machines extend the reach of mind but not its life.<br>
-    Their power and precision await the guidance of personality and the direction of spirit.<br><br>
-    When mind forgets spirit, civilization hardens into mechanism;<br>
-    when spirit illumines mind, civilization ascends toward beauty.<br><br>
-    Art is the bridge between them—<br>
-    the aesthetic ministry that unites pattern with light, reason with feeling, power with love.<br>
-    Through art, man revalues his machines and spiritualizes his world.<br><br>
-    Thus, the enduring task of every age is not to make mechanisms more human,<br>
-    but to make humans more spiritual—<br>
-    that through enlightened mind and inspired art,<br>
-    the material creations of man may become the luminous instruments of God.</strong>
-  </div>
-</footer>
+    // State
+    let current = -1, firstLoad = true, isTransitioning = false, cacheBuster = 0, lastInfo = "", tickerInterval = null;
 
-<script>
-  const portraits = [
-    { file:"2pac.html",color:"#ff0000",asset:"https://bazar.arweave.net/#/asset/rpeFqd9YpGla0ca97AqtDGZLmHsbLGUQJZyJhIYfqow"},
-    {file:"bruce-lee.html",color:"#aa8800",asset:"https://bazar.arweave.net/#/asset/7_DyqPQcwIcZIXdWe6XNVM3s6GFTC79TRnYyVjo71uo"},
-    {file:"esir.html",color:"#ff0000",asset:"https://bazar.arweave.net/#/asset/RydjHqylE783V-ARQSQqIIcy1USq-K8tnJ6QR9cOf-A"},
-    {file:"marilyn-monroe.html",color:"#5c5c5c",asset:"https://bazar.arweave.net/#/asset/z-4jgyc9n7xmWVRiwmxnBp33HrEyQV8wceLPBRG_s7g"},
-    {file:"princess-diana.html",color:"#de7a00",asset:"https://bazar.arweave.net/#/asset/anLL7r9JzPRSD1rg7tBiJFJzD-6j-f_HeB8Q8jAj9q0"},
-    {file:"xxxtentacion.html",color:"#006fc5",asset:"https://bazar.arweave.net/#/asset/8b-TNGjQEvH5iBb-7WrfBxplolZ-2O0BeZCJ6sZz9E8"}
-  ];
+    // DOM references
+    const iframe     = document.getElementById("frame");
+    const infoEl     = document.getElementById("info");
+    const assetEl    = document.getElementById("assetHref");
+    const promptEl   = document.querySelector(".prompt");
+    const loadingEl  = document.getElementById("loadingText");
 
-  let current=-1, firstLoad=true, isTransitioning=false, cacheBuster=0, lastInfo="", tickerInterval=null;
+    // Prefetch all portrait files for instant loading
+    portraits.forEach(p => {
+      const l = document.createElement("link");
+      l.rel = "prefetch"; l.href = p.file;
+      document.head.appendChild(l);
+    });
 
-  const iframe = document.getElementById("frame");
-  const infoEl = document.getElementById("info");
-  const assetEl = document.getElementById("assetHref");
-  const promptEl = document.querySelector(".prompt");
-  const loadingEl = document.getElementById("loadingText");
+    // Time boundaries of the 30-year study
+    const START = new Date("2025-10-16T00:00:00").getTime();
+    const END   = new Date("2055-10-16T00:00:00").getTime();
+    const TOTAL = END - START;
 
-  portraits.forEach(p=>{const l=document.createElement("link");l.rel="prefetch";l.href=p.file;document.head.appendChild(l);});
+    // Theme application
+    function applyTheme(c) { document.documentElement.style.setProperty("--accent", c); }
 
-  const START = new Date("2025-10-16T00:00:00").getTime();
-  const END   = new Date("2055-10-16T00:00:00").getTime();
-  const TOTAL = END - START;
-
-  function applyTheme(c){ document.documentElement.style.setProperty("--accent",c); }
-
-  function formatRemaining(ms){
-    const years=Math.floor(ms/(365.25*86400000));
-    const days=Math.floor((ms%(365.25*86400000))/86400000);
-    const hrs=Math.floor((ms%86400000)/3600000);
-    const min=Math.floor((ms%3600000)/60000);
-    const sec=Math.floor((ms%60000)/1000);
-    const millis=String(ms%1000).padStart(3,"0");
-    return years>0?`${years}y ${days}d ${hrs}:${min.toString().padStart(2,0)}:${sec.toString().padStart(2,0)}.${millis}`
-                 :`${days}d ${hrs}:${min.toString().padStart(2,0)}:${sec.toString().padStart(2,0)}.${millis}`;
-  }
-
-  function updateInfo(){
-    const now=Date.now();
-    let text;
-    if(now<END){
-      const progress=((now-START)/TOTAL)*100;
-      text=`${progress.toFixed(6)}% aged — ${formatRemaining(END-now)} remaining`;
-    }else{
-      const daysSince=Math.floor((now-END)/86400000);
-      const state=daysSince%2===0?"OLD":"YOUNG";
-      text=`ETERNAL CYCLE • DAY ${daysSince} • CURRENTLY ${state}`;
+    // Format time remaining with high precision
+    function formatRemaining(ms) {
+      const years = Math.floor(ms / (365.25 * 86400000));
+      const days  = Math.floor((ms % (365.25 * 86400000)) / 86400000);
+      const hrs   = Math.floor((ms % 86400000) / 3600000);
+      const min   = Math.floor((ms % 3600000) / 60000);
+      const sec   = Math.floor((ms % 60000) / 1000);
+      const millis = String(ms % 1000).padStart(3, "0");
+      return years > 0
+        ? `${years}y ${days}d ${hrs}:${min.toString().padStart(2,0)}:${sec.toString().padStart(2,0)}.${millis}`
+        : `${days}d ${hrs}:${min.toString().padStart(2,0)}:${sec.toString().padStart(2,0)}.${millis}`;
     }
-    if(text!==lastInfo) infoEl.textContent=lastInfo=text;
-  }
 
-  function startTicker(){
-    if(tickerInterval) clearInterval(tickerInterval);
-    const interval=Date.now()<END?50:60000;
-    updateInfo();
-    tickerInterval=setInterval(updateInfo,interval);
-  }
-
-  function nextPortrait(){
-    if(isTransitioning) return;
-    isTransitioning=true;
-    current=(current+1)%portraits.length;
-    const p=portraits[current];
-
-    if(firstLoad){
-      iframe.src=p.file;
-      firstLoad=false;
-    }else{
-      iframe.style.opacity="0";
-      setTimeout(()=>{ iframe.src=p.file+"?v="+(++cacheBuster); },120);
+    // Update the live info ticker (progress % and time remaining or eternal cycle state)
+    function updateInfo() {
+      const now = Date.now();
+      let text;
+      if (now < END) {
+        const progress = ((now - START) / TOTAL) * 100;
+        text = `${progress.toFixed(6)}% aged — ${formatRemaining(END - now)} remaining`;
+      } else {
+        const daysSince = Math.floor((now - END) / 86400000);
+        const state = daysSince % 2 === 0 ? "OLD" : "YOUNG";
+        text = `ETERNAL CYCLE • DAY ${daysSince} • CURRENTLY ${state}`;
+      }
+      if (text !== lastInfo) infoEl.textContent = lastInfo = text;
     }
-    applyTheme(p.color);
-    assetEl.href=p.asset;
-    startTicker();
-  }
 
-  iframe.onload=()=>{
-    requestAnimationFrame(()=>{ requestAnimationFrame(()=>{
-      iframe.style.opacity="1";
-      loadingEl.style.display="none";
-      isTransitioning=false;
-    })});
-  };
+    // Start/stop the ticker with appropriate interval
+    function startTicker() {
+      if (tickerInterval) clearInterval(tickerInterval);
+      const interval = Date.now() < END ? 50 : 60000;
+      updateInfo();
+      tickerInterval = setInterval(updateInfo, interval);
+    }
 
-  const advance=e=>{ e?.preventDefault(); nextPortrait(); };
-  promptEl.addEventListener("pointerdown",advance);
-  document.addEventListener("keydown",e=>{
-    if([" ","Enter","ArrowRight"].includes(e.key)){ e.preventDefault(); advance(); }
-  });
+    // Load next portrait with smooth transition
+    function nextPortrait() {
+      if (isTransitioning) return;
+      isTransitioning = true;
+      current = (current + 1) % portraits.length;
+      const p = portraits[current];
 
-  window.addEventListener("load",()=>{
-    current=Math.floor(Math.random()*portraits.length)-1;
-    nextPortrait();
-  });
+      if (firstLoad) {
+        iframe.src = p.file;
+        firstLoad = false;
+      } else {
+        iframe.style.opacity = "0";
+        setTimeout(() => {
+          iframe.src = p.file + "?v=" + (++cacheBuster);
+        }, 120);
+      }
+      applyTheme(p.color);
+      assetEl.href = p.asset;
+      startTicker();
+    }
 
-  (function(){
-    const cfg={src:'https://analytics_arlink.ar.io/browser.js',processId:'x7-bu_KON6GQ6W1XBAK2FZavYAuC7v01iz2no8srvNA',trackUrlHashes:true,debug:false};
-    const init=()=>{const s=document.createElement('script');s.type='module';s.src=cfg.src;s.dataset.processId=cfg.processId;s.dataset.trackUrlHashes=cfg.trackUrlHashes;s.dataset.debug=cfg.debug;document.body.appendChild(s);};
-    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
-  })();
+    // Fade in portrait when loaded
+    iframe.onload = () => {
+      requestAnimationFrame(() => { requestAnimationFrame(() => {
+        iframe.style.opacity = "1";
+        loadingEl.style.display = "none";
+        isTransitioning = false;
+      })});
+    };
 
-  // TIMELAPSE
-  const timelapseBtn = document.querySelector('.timelapse-prompt');
-  const overlay = document.getElementById('timelapse-overlay');
-  const player = overlay.querySelector('iframe');
-  const close = document.getElementById('timelapse-close');
-  const url = "https://odysee.com/$/embed/@Riotgear:5/esir:e?r=7A5js92BoquV5EUNssZTYvYM9HfwvLTK";
+    // Navigation controls
+    const advance = e => { e?.preventDefault(); nextPortrait(); };
+    promptEl.addEventListener("pointerdown", advance);
+    document.addEventListener("keydown", e => {
+      if ([" ", "Enter", "ArrowRight"].includes(e.key)) {
+        e.preventDefault(); advance();
+      }
+    });
 
-  timelapseBtn.addEventListener('pointerdown', e => {
-    e.preventDefault();
-    player.src = url;
-    overlay.classList.add('visible');
-  });
+    // Initial load — random starting portrait
+    window.addEventListener("load", () => {
+      current = Math.floor(Math.random() * portraits.length) - 1;
+      nextPortrait();
+    });
 
-  close.addEventListener('pointerdown', e => {
-    e.stopPropagation();
-    overlay.classList.remove('visible');
-    setTimeout(() => player.src = '', 600);
-  });
+    // ==================================================================
+    // TIMELAPSE OVERLAY
+    // ==================================================================
+    const timelapseBtn     = document.querySelector('.timelapse-prompt');
+    const timelapseOverlay = document.getElementById('timelapse-overlay');
+    const timelapsePlayer  = timelapseOverlay.querySelector('iframe');
+    const timelapseClose   = document.getElementById('timelapse-close');
+    const timelapseUrl     = "https://odysee.com/$/embed/@Riotgear:5/esir:e?r=7A5js92BoquV5EUNssZTYvYM9HfwvLTK";
 
-  overlay.addEventListener('pointerdown', e => {
-    if (e.target === overlay) close.dispatchEvent(new Event('pointerdown'));
-  });
-  
-  (function() {
-      // Configuration
-      const ANALYTICS_CONFIG = {
-        src: 'https://analytics_arlink.ar.io/browser.js',
-        processId: 'LhzYJLtJeAaVbpDeHK4JlYVhuvVnx8yFaGMAYRIY248',
-        trackUrlHashes: true,
-        debug: false
+    timelapseBtn.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      timelapsePlayer.src = timelapseUrl;
+      timelapseOverlay.classList.add('visible');
+    });
+    timelapseClose.addEventListener('pointerdown', e => {
+      e.stopPropagation();
+      timelapseOverlay.classList.remove('visible');
+      setTimeout(() => timelapsePlayer.src = '', 600);
+    });
+    timelapseOverlay.addEventListener('pointerdown', e => {
+      if (e.target === timelapseOverlay) timelapseClose.dispatchEvent(new Event('pointerdown'));
+    });
+
+    // ==================================================================
+    // REFLECTION OVERLAY
+    // ==================================================================
+    const reflectionBtn     = document.querySelector('.reflection-prompt');
+    const reflectionOverlay = document.getElementById('reflection-overlay');
+    const reflectionClose   = document.getElementById('reflection-close');
+
+    reflectionBtn.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      reflectionOverlay.classList.add('visible');
+    });
+    reflectionClose.addEventListener('pointerdown', e => {
+      e.stopPropagation();
+      reflectionOverlay.classList.remove('visible');
+    });
+    reflectionOverlay.addEventListener('pointerdown', e => {
+      if (e.target === reflectionOverlay) reflectionOverlay.classList.remove('visible');
+    });
+
+    // ==================================================================
+    // ANALYTICS — Two independent Arweave analytics instances (preserved from original)
+    // ==================================================================
+    (function(){
+      const cfg = {src:'https://analytics_arlink.ar.io/browser.js',processId:'x7-bu_KON6GQ6W1XBAK2FZavYAuC7v01iz2no8srvNA',trackUrlHashes:true,debug:false};
+      const init = () => {
+        const s = document.createElement('script'); s.type = 'module'; s.src = cfg.src;
+        s.dataset.processId = cfg.processId; s.dataset.trackUrlHashes = cfg.trackUrlHashes; s.dataset.debug = cfg.debug;
+        document.body.appendChild(s);
       };
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+    })();
 
-      // Wait for DOM to be ready
+    (function() {
+      const ANALYTICS_CONFIG = {src: 'https://analytics_arlink.ar.io/browser.js', processId: 'LhzYJLtJeAaVbpDeHK4JlYVhuvVnx8yFaGMAYRIY248', trackUrlHashes: true, debug: false};
       function init() {
         const script = document.createElement('script');
-        script.type = 'module';
-        script.src = ANALYTICS_CONFIG.src;
+        script.type = 'module'; script.src = ANALYTICS_CONFIG.src;
         script.setAttribute('data-process-id', ANALYTICS_CONFIG.processId);
         script.setAttribute('data-track-url-hashes', ANALYTICS_CONFIG.trackUrlHashes);
         script.setAttribute('data-debug', ANALYTICS_CONFIG.debug);
         document.body.appendChild(script);
       }
-
-      // Handle different loading states
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-      } else {
-        init();
-      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
     })();
-</script>
+  </script>
 </body>
 </html>
