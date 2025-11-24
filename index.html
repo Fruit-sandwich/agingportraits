@@ -275,7 +275,7 @@
       </ul>
       <p>It is the viewer’s own inner life that turns a digital sequence into an encounter with meaning.</p>
 
-      <h3>Art Is the Human Answer to the Age of Simulation</h3>
+      <h3>Art as the Human Answer to the Age of Simulation</h3>
       <p>Machines today can create perfect images in seconds.<br>
       They can age a face in moments.<br>
       They can mimic voices, gestures, and patterns of speech.<br>
@@ -287,8 +287,8 @@
       The portrait becomes a reminder that every human life unfolds moment by moment — not through computation, but through lived experience.</p>
 
       <h3>This Work as a Response to Digital Immortality</h3>
-      <p>Our age is captivated by the idea that identity can be preserved as data — that a person might continue inside a machine.<br>
-      But watching this portrait age reveals the limitation of that idea.<br>
+      <p>On the horizon is the idea that identity can be preserved as data — that a person might continue inside a machine. <br> But data is the exhaust fumes of creativity, not its essence</br><br>
+      Watching these portraits age reveals the limitation of that idea.<br>
       Digital endurance is not immortality. Pattern is not personality. Simulation is not spirit.</p>
 
       <h3>What This Artwork Ultimately Invites</h3>
@@ -313,9 +313,9 @@
     <div class="benediction">
       <strong>Mind is living; mechanism is law.<br>
       Machines extend the reach of mind but not its life.<br>
-      Their power and precision await the guidance of personality and the direction of spirit.<br><br>
+      Their power and precision await the guidance of personality and the direction of Spirit.<br><br>
       When mind forgets spirit, civilization hardens into mechanism;<br>
-      when spirit illumines mind, civilization ascends toward beauty.<br><br>
+      when Spirit illumines mind, civilization ascends toward beauty.<br><br>
       Art is the bridge between them—<br>
       the aesthetic ministry that unites pattern with light, reason with feeling, power with love.<br>
       Through art, man revalues his machines and spiritualizes his world.<br><br>
@@ -489,29 +489,34 @@
     });
 
     // ==================================================================
-    // ANALYTICS — Two independent Arweave analytics instances (preserved from original)
+    // ANALYTICS arlink analytics
     // ==================================================================
-    (function(){
-      const cfg = {src:'https://analytics_arlink.ar.io/browser.js',processId:'x7-bu_KON6GQ6W1XBAK2FZavYAuC7v01iz2no8srvNA',trackUrlHashes:true,debug:false};
-      const init = () => {
-        const s = document.createElement('script'); s.type = 'module'; s.src = cfg.src;
-        s.dataset.processId = cfg.processId; s.dataset.trackUrlHashes = cfg.trackUrlHashes; s.dataset.debug = cfg.debug;
-        document.body.appendChild(s);
-      };
-      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
-    })();
-
     (function() {
-      const ANALYTICS_CONFIG = {src: 'https://analytics_arlink.ar.io/browser.js', processId: 'LhzYJLtJeAaVbpDeHK4JlYVhuvVnx8yFaGMAYRIY248', trackUrlHashes: true, debug: false};
+      // Configuration
+      const ANALYTICS_CONFIG = {
+        src: 'https://analytics_arlink.ar.io/browser.js',
+        processId: 'EOmyt2LtFXhQUB4tfDy-ITnhUGUOmzGOTQp-d5pwMi0',
+        trackUrlHashes: true,
+        debug: false
+      };
+
+      // Wait for DOM to be ready
       function init() {
         const script = document.createElement('script');
-        script.type = 'module'; script.src = ANALYTICS_CONFIG.src;
+        script.type = 'module';
+        script.src = ANALYTICS_CONFIG.src;
         script.setAttribute('data-process-id', ANALYTICS_CONFIG.processId);
         script.setAttribute('data-track-url-hashes', ANALYTICS_CONFIG.trackUrlHashes);
         script.setAttribute('data-debug', ANALYTICS_CONFIG.debug);
         document.body.appendChild(script);
       }
-      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+
+      // Handle different loading states
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
     })();
   </script>
 </body>
